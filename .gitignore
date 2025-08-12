@@ -1,0 +1,39 @@
+android/
+ios/
+windows/
+macos/
+linux/
+web/
+
+# Flutter analysis
+analysis_options.yaml
+
+# Generated files
+*.g.dart
+*.freezed.dart
+
+# Build outputs
+build/
+
+# Dependencies
+.dart_tool/
+.packages
+
+# IDE
+.idea/
+.vscode/launch.json
+.vscode/settings.json
+
+# Platform-specific
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
