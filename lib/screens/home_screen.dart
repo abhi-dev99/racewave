@@ -6,6 +6,7 @@ import 'drivers_screen.dart';
 import 'races_screen.dart';
 import 'strategy_screen.dart';
 import 'standings_screen.dart';
+import 'f1_data_test_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

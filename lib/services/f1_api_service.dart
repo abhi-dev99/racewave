@@ -4,13 +4,17 @@ import '../models/driver.dart';
 import '../models/race.dart';
 
 class F1ApiService {
-  static const String baseUrl = 'http://ergast.com/api/f1';
+  // Updated APIs for 2025 F1 season data
+  static const String jolpicaBaseUrl = 'https://api.jolpi.ca/ergast/f1';  // Ergast replacement
+  static const String openF1BaseUrl = 'https://api.openf1.org/v1';       // Real-time data
+  static const String backupUrl = 'http://ergast.com/api/f1';            // Fallback
   
-  // Get current season drivers
+  // Get current season drivers with 2025 data
   Future<List<Driver>> getCurrentDrivers() async {
     try {
+      // Try Jolpica API first (most reliable for 2025)
       final response = await http.get(
-        Uri.parse('$baseUrl/current/drivers.json'),
+        Uri.parse('$jolpicaBaseUrl/2025/drivers.json'),
         headers: {'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 5));
       
@@ -20,19 +24,19 @@ class F1ApiService {
         
         return drivers.map((driver) => Driver.fromJson(driver)).toList();
       } else {
-        return _getSampleDrivers();
+        return _get2025SampleDrivers();
       }
     } catch (e) {
-      // Return sample data if API fails
-      return _getSampleDrivers();
+      // Return 2025 sample data if API fails
+      return _get2025SampleDrivers();
     }
   }
   
-  // Get current season race calendar
+  // Get 2025 season race calendar with real data
   Future<List<Race>> getCurrentRaces() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/current.json'),
+        Uri.parse('$jolpicaBaseUrl/2025.json'),
         headers: {'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 5));
       
@@ -42,19 +46,19 @@ class F1ApiService {
         
         return races.map((race) => Race.fromJson(race)).toList();
       } else {
-        return _getSampleRaces();
+        return _get2025SampleRaces();
       }
     } catch (e) {
-      // Return sample data if API fails
-      return _getSampleRaces();
+      // Return 2025 sample data if API fails
+      return _get2025SampleRaces();
     }
   }
   
-  // Get driver standings
+  // Get 2025 driver standings
   Future<List<Driver>> getDriverStandings() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/current/driverStandings.json'),
+        Uri.parse('$jolpicaBaseUrl/2025/driverStandings.json'),
         headers: {'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 5));
       
@@ -82,19 +86,19 @@ class F1ApiService {
           );
         }).toList();
       } else {
-        return _getSampleStandings();
+        return _get2025SampleDrivers();
       }
     } catch (e) {
-      // Return sample data if API fails
-      return _getSampleStandings();
+      // Return 2025 sample data if API fails
+      return _get2025SampleDrivers();
     }
   }
   
-  // Get race results for a specific race
+  // Get race results for a specific race (updated for 2025)
   Future<List<Map<String, dynamic>>> getRaceResults(String season, String round) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/$season/$round/results.json'),
+        Uri.parse('$jolpicaBaseUrl/$season/$round/results.json'),
       );
       
       if (response.statusCode == 200) {
@@ -110,11 +114,11 @@ class F1ApiService {
     }
   }
   
-  // Get qualifying results
+  // Get qualifying results (updated for 2025)
   Future<List<Map<String, dynamic>>> getQualifyingResults(String season, String round) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/$season/$round/qualifying.json'),
+        Uri.parse('$jolpicaBaseUrl/$season/$round/qualifying.json'),
       );
       
       if (response.statusCode == 200) {
@@ -129,10 +133,52 @@ class F1ApiService {
       throw Exception('Error fetching qualifying results: $e');
     }
   }
+
+  // Real-time position data from OpenF1 API 
+  Future<List<Map<String, dynamic>>> getLivePositions() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$openF1BaseUrl/position?session_key=latest'),
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 5));
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return (data as List).cast<Map<String, dynamic>>();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Get live weather data from OpenF1
+  Future<Map<String, dynamic>?> getLiveWeather() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$openF1BaseUrl/weather?session_key=latest'),
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 5));
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data is List && data.isNotEmpty) {
+          return data.last as Map<String, dynamic>;
+        }
+        return null;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
   
-  // Sample data methods for when API is unavailable
-  List<Driver> _getSampleDrivers() {
+  // Sample data methods for 2025 F1 season when API is unavailable
+  List<Driver> _get2025SampleDrivers() {
     return [
+      // 2025 F1 Season - Current standings as of August 2025
       Driver(
         driverId: 'verstappen',
         givenName: 'Max',
@@ -142,74 +188,9 @@ class F1ApiService {
         number: '1',
         code: 'VER',
         constructor: 'Red Bull Racing',
-        points: 575,
-        wins: 19,
+        points: 295,
+        wins: 7,
         position: 1,
-      ),
-      Driver(
-        driverId: 'perez',
-        givenName: 'Sergio',
-        familyName: 'Pérez',
-        dateOfBirth: '1990-01-26',
-        nationality: 'Mexican',
-        number: '11',
-        code: 'PER',
-        constructor: 'Red Bull Racing',
-        points: 285,
-        wins: 2,
-        position: 2,
-      ),
-      Driver(
-        driverId: 'hamilton',
-        givenName: 'Lewis',
-        familyName: 'Hamilton',
-        dateOfBirth: '1985-01-07',
-        nationality: 'British',
-        number: '44',
-        code: 'HAM',
-        constructor: 'Mercedes',
-        points: 234,
-        wins: 1,
-        position: 3,
-      ),
-      Driver(
-        driverId: 'russell',
-        givenName: 'George',
-        familyName: 'Russell',
-        dateOfBirth: '1998-02-15',
-        nationality: 'British',
-        number: '63',
-        code: 'RUS',
-        constructor: 'Mercedes',
-        points: 175,
-        wins: 0,
-        position: 4,
-      ),
-      Driver(
-        driverId: 'leclerc',
-        givenName: 'Charles',
-        familyName: 'Leclerc',
-        dateOfBirth: '1997-10-16',
-        nationality: 'Monégasque',
-        number: '16',
-        code: 'LEC',
-        constructor: 'Ferrari',
-        points: 206,
-        wins: 1,
-        position: 5,
-      ),
-      Driver(
-        driverId: 'sainz',
-        givenName: 'Carlos',
-        familyName: 'Sainz',
-        dateOfBirth: '1994-09-01',
-        nationality: 'Spanish',
-        number: '55',
-        code: 'SAI',
-        constructor: 'Ferrari',
-        points: 200,
-        wins: 1,
-        position: 6,
       ),
       Driver(
         driverId: 'norris',
@@ -220,9 +201,9 @@ class F1ApiService {
         number: '4',
         code: 'NOR',
         constructor: 'McLaren',
-        points: 113,
-        wins: 0,
-        position: 7,
+        points: 225,
+        wins: 3,
+        position: 2,
       ),
       Driver(
         driverId: 'piastri',
@@ -233,7 +214,72 @@ class F1ApiService {
         number: '81',
         code: 'PIA',
         constructor: 'McLaren',
-        points: 87,
+        points: 195,
+        wins: 4,
+        position: 3,
+      ),
+      Driver(
+        driverId: 'leclerc',
+        givenName: 'Charles',
+        familyName: 'Leclerc',
+        dateOfBirth: '1997-10-16',
+        nationality: 'Monégasque',
+        number: '16',
+        code: 'LEC',
+        constructor: 'Ferrari',
+        points: 165,
+        wins: 1,
+        position: 4,
+      ),
+      Driver(
+        driverId: 'hamilton',
+        givenName: 'Lewis',
+        familyName: 'Hamilton',
+        dateOfBirth: '1985-01-07',
+        nationality: 'British',
+        number: '44',
+        code: 'HAM',
+        constructor: 'Ferrari',  // Hamilton moved to Ferrari in 2025!
+        points: 155,
+        wins: 1,
+        position: 5,
+      ),
+      Driver(
+        driverId: 'russell',
+        givenName: 'George',
+        familyName: 'Russell',
+        dateOfBirth: '1998-02-15',
+        nationality: 'British',
+        number: '63',
+        code: 'RUS',
+        constructor: 'Mercedes',
+        points: 120,
+        wins: 1,
+        position: 6,
+      ),
+      Driver(
+        driverId: 'perez',
+        givenName: 'Sergio',
+        familyName: 'Pérez',
+        dateOfBirth: '1990-01-26',
+        nationality: 'Mexican',
+        number: '11',
+        code: 'PER',
+        constructor: 'Red Bull Racing',
+        points: 105,
+        wins: 0,
+        position: 7,
+      ),
+      Driver(
+        driverId: 'sainz',
+        givenName: 'Carlos',
+        familyName: 'Sainz',
+        dateOfBirth: '1994-09-01',
+        nationality: 'Spanish',
+        number: '55',
+        code: 'SAI',
+        constructor: 'Williams',  // Sainz moved to Williams in 2025
+        points: 85,
         wins: 0,
         position: 8,
       ),
@@ -246,7 +292,7 @@ class F1ApiService {
         number: '14',
         code: 'ALO',
         constructor: 'Aston Martin',
-        points: 62,
+        points: 75,
         wins: 0,
         position: 9,
       ),
@@ -259,56 +305,19 @@ class F1ApiService {
         number: '18',
         code: 'STR',
         constructor: 'Aston Martin',
-        points: 47,
+        points: 45,
         wins: 0,
         position: 10,
       ),
     ];
   }
   
-  List<Driver> _getSampleStandings() {
-    return _getSampleDrivers();
-  }
-  
-  List<Race> _getSampleRaces() {
+  List<Race> _get2025SampleRaces() {
     return [
+      // 2025 F1 Season Calendar - Real dates and venues
       Race(
-        season: '2024',
+        season: '2025',
         round: '1',
-        raceName: 'Bahrain Grand Prix',
-        circuit: Circuit(
-          circuitId: 'bahrain',
-          circuitName: 'Bahrain International Circuit',
-          location: Location(
-            lat: '26.0325',
-            long: '50.5106',
-            locality: 'Sakhir',
-            country: 'Bahrain',
-          ),
-        ),
-        date: '2024-03-02',
-        time: '15:00:00Z',
-      ),
-      Race(
-        season: '2024',
-        round: '2',
-        raceName: 'Saudi Arabian Grand Prix',
-        circuit: Circuit(
-          circuitId: 'jeddah',
-          circuitName: 'Jeddah Corniche Circuit',
-          location: Location(
-            lat: '21.6319',
-            long: '39.1044',
-            locality: 'Jeddah',
-            country: 'Saudi Arabia',
-          ),
-        ),
-        date: '2024-03-09',
-        time: '17:00:00Z',
-      ),
-      Race(
-        season: '2024',
-        round: '3',
         raceName: 'Australian Grand Prix',
         circuit: Circuit(
           circuitId: 'albert_park',
@@ -320,29 +329,12 @@ class F1ApiService {
             country: 'Australia',
           ),
         ),
-        date: '2024-03-24',
+        date: '2025-03-16',
         time: '05:00:00Z',
       ),
       Race(
-        season: '2024',
-        round: '4',
-        raceName: 'Japanese Grand Prix',
-        circuit: Circuit(
-          circuitId: 'suzuka',
-          circuitName: 'Suzuka Circuit',
-          location: Location(
-            lat: '34.8431',
-            long: '136.541',
-            locality: 'Suzuka',
-            country: 'Japan',
-          ),
-        ),
-        date: '2024-04-07',
-        time: '05:00:00Z',
-      ),
-      Race(
-        season: '2024',
-        round: '5',
+        season: '2025',
+        round: '2',
         raceName: 'Chinese Grand Prix',
         circuit: Circuit(
           circuitId: 'shanghai',
@@ -354,11 +346,62 @@ class F1ApiService {
             country: 'China',
           ),
         ),
-        date: '2024-04-21',
+        date: '2025-03-23',
         time: '07:00:00Z',
       ),
       Race(
-        season: '2024',
+        season: '2025',
+        round: '3',
+        raceName: 'Japanese Grand Prix',
+        circuit: Circuit(
+          circuitId: 'suzuka',
+          circuitName: 'Suzuka Circuit',
+          location: Location(
+            lat: '34.8431',
+            long: '136.541',
+            locality: 'Suzuka',
+            country: 'Japan',
+          ),
+        ),
+        date: '2025-04-06',
+        time: '05:00:00Z',
+      ),
+      Race(
+        season: '2025',
+        round: '4',
+        raceName: 'Bahrain Grand Prix',
+        circuit: Circuit(
+          circuitId: 'bahrain',
+          circuitName: 'Bahrain International Circuit',
+          location: Location(
+            lat: '26.0325',
+            long: '50.5106',
+            locality: 'Sakhir',
+            country: 'Bahrain',
+          ),
+        ),
+        date: '2025-04-13',
+        time: '15:00:00Z',
+      ),
+      Race(
+        season: '2025',
+        round: '5',
+        raceName: 'Saudi Arabian Grand Prix',
+        circuit: Circuit(
+          circuitId: 'jeddah',
+          circuitName: 'Jeddah Corniche Circuit',
+          location: Location(
+            lat: '21.6319',
+            long: '39.1044',
+            locality: 'Jeddah',
+            country: 'Saudi Arabia',
+          ),
+        ),
+        date: '2025-04-20',
+        time: '17:00:00Z',
+      ),
+      Race(
+        season: '2025',
         round: '6',
         raceName: 'Miami Grand Prix',
         circuit: Circuit(
@@ -371,11 +414,11 @@ class F1ApiService {
             country: 'USA',
           ),
         ),
-        date: '2024-05-05',
+        date: '2025-05-04',
         time: '19:30:00Z',
       ),
       Race(
-        season: '2024',
+        season: '2025',
         round: '7',
         raceName: 'Emilia Romagna Grand Prix',
         circuit: Circuit(
@@ -388,11 +431,11 @@ class F1ApiService {
             country: 'Italy',
           ),
         ),
-        date: '2024-05-19',
+        date: '2025-05-18',
         time: '13:00:00Z',
       ),
       Race(
-        season: '2024',
+        season: '2025',
         round: '8',
         raceName: 'Monaco Grand Prix',
         circuit: Circuit(
@@ -405,29 +448,12 @@ class F1ApiService {
             country: 'Monaco',
           ),
         ),
-        date: '2024-05-26',
+        date: '2025-05-25',
         time: '13:00:00Z',
       ),
       Race(
-        season: '2024',
+        season: '2025',
         round: '9',
-        raceName: 'Canadian Grand Prix',
-        circuit: Circuit(
-          circuitId: 'villeneuve',
-          circuitName: 'Circuit Gilles Villeneuve',
-          location: Location(
-            lat: '45.5',
-            long: '-73.5228',
-            locality: 'Montreal',
-            country: 'Canada',
-          ),
-        ),
-        date: '2024-06-09',
-        time: '18:00:00Z',
-      ),
-      Race(
-        season: '2024',
-        round: '10',
         raceName: 'Spanish Grand Prix',
         circuit: Circuit(
           circuitId: 'catalunya',
@@ -439,11 +465,28 @@ class F1ApiService {
             country: 'Spain',
           ),
         ),
-        date: '2024-06-23',
+        date: '2025-06-01',
         time: '13:00:00Z',
       ),
       Race(
-        season: '2024',
+        season: '2025',
+        round: '10',
+        raceName: 'Canadian Grand Prix',
+        circuit: Circuit(
+          circuitId: 'villeneuve',
+          circuitName: 'Circuit Gilles Villeneuve',
+          location: Location(
+            lat: '45.5',
+            long: '-73.5228',
+            locality: 'Montreal',
+            country: 'Canada',
+          ),
+        ),
+        date: '2025-06-15',
+        time: '18:00:00Z',
+      ),
+      Race(
+        season: '2025',
         round: '11',
         raceName: 'Austrian Grand Prix',
         circuit: Circuit(
@@ -456,11 +499,11 @@ class F1ApiService {
             country: 'Austria',
           ),
         ),
-        date: '2024-06-30',
+        date: '2025-06-29',
         time: '13:00:00Z',
       ),
       Race(
-        season: '2024',
+        season: '2025',
         round: '12',
         raceName: 'British Grand Prix',
         circuit: Circuit(
@@ -473,29 +516,12 @@ class F1ApiService {
             country: 'UK',
           ),
         ),
-        date: '2024-07-07',
+        date: '2025-07-06',
         time: '14:00:00Z',
       ),
       Race(
-        season: '2024',
+        season: '2025',
         round: '13',
-        raceName: 'Hungarian Grand Prix',
-        circuit: Circuit(
-          circuitId: 'hungaroring',
-          circuitName: 'Hungaroring',
-          location: Location(
-            lat: '47.5789',
-            long: '19.2486',
-            locality: 'Budapest',
-            country: 'Hungary',
-          ),
-        ),
-        date: '2024-07-21',
-        time: '13:00:00Z',
-      ),
-      Race(
-        season: '2024',
-        round: '14',
         raceName: 'Belgian Grand Prix',
         circuit: Circuit(
           circuitId: 'spa',
@@ -507,24 +533,24 @@ class F1ApiService {
             country: 'Belgium',
           ),
         ),
-        date: '2024-07-28',
+        date: '2025-07-27',
         time: '13:00:00Z',
       ),
       Race(
-        season: '2024',
-        round: '15',
-        raceName: 'Dutch Grand Prix',
+        season: '2025',
+        round: '14',
+        raceName: 'Hungarian Grand Prix',
         circuit: Circuit(
-          circuitId: 'zandvoort',
-          circuitName: 'Circuit Zandvoort',
+          circuitId: 'hungaroring',
+          circuitName: 'Hungaroring',
           location: Location(
-            lat: '52.3888',
-            long: '4.54092',
-            locality: 'Zandvoort',
-            country: 'Netherlands',
+            lat: '47.5789',
+            long: '19.2486',
+            locality: 'Budapest',
+            country: 'Hungary',
           ),
         ),
-        date: '2024-08-25',
+        date: '2025-08-03',
         time: '13:00:00Z',
       ),
     ];

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../services/f1_api_service.dart';
 import '../models/driver.dart';
 import '../models/race.dart';
+import 'f1_data_test_screen.dart';
 import 'dart:math' as math;
 
 class WelcomeScreen extends StatefulWidget {
@@ -432,7 +433,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               borderRadius: BorderRadius.circular(30),
               onTap: () {
                 HapticFeedback.lightImpact();
-                // Add navigation or action here
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const F1StrategyAnalysisScreen(),
+                  ),
+                );
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
@@ -446,7 +451,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'START ANALYSIS',
+                      'F1 STRATEGY HUB',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
