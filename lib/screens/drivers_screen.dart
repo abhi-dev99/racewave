@@ -93,6 +93,9 @@ class _DriversScreenState extends State<DriversScreen>
             else ...[
               _buildSearchBar(),
               _buildDriversGrid(),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 100),
+              ),
             ],
           ],
         ),

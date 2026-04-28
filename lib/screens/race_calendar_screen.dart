@@ -276,7 +276,7 @@ class _RaceCalendarScreenState extends State<RaceCalendarScreen> with AutomaticK
     final firstWeekday = firstDayOfMonth.weekday % 7; // 0 = Sunday
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 100),
       child: Column(
         children: [
           // Calendar grid
@@ -431,7 +431,11 @@ class _RaceCalendarScreenState extends State<RaceCalendarScreen> with AutomaticK
 
   Widget _buildListView(bool isDark, bool isCompact) {
     return ListView.builder(
-      padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 20),
+      padding: EdgeInsets.only(
+        left: isCompact ? 12 : 20,
+        right: isCompact ? 12 : 20,
+        bottom: 100,
+      ),
       itemCount: _races.length,
       itemBuilder: (context, index) {
         return _buildRaceCard(_races[index], isDark, isCompact: isCompact);

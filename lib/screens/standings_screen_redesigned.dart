@@ -228,7 +228,11 @@ class _StandingsScreenRedesignedState extends State<StandingsScreenRedesigned> {
     return RefreshIndicator(
       onRefresh: _loadStandings,
       child: ListView.builder(
-        padding: EdgeInsets.symmetric(horizontal: isCompact ? 12 : 20),
+        padding: EdgeInsets.only(
+          left: isCompact ? 12 : 20,
+          right: isCompact ? 12 : 20,
+          bottom: 100,
+        ),
         itemCount: _standings.length,
         itemBuilder: (context, index) {
           final driver = _standings[index];
@@ -263,7 +267,7 @@ class _StandingsScreenRedesignedState extends State<StandingsScreenRedesigned> {
     final maxPoints = top10.first.points.toDouble();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

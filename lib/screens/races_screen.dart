@@ -68,8 +68,10 @@ class _RacesScreenState extends State<RacesScreen>
                 onRetry: _loadRaces,
               ),
             )
-          else
+          else ...[
             _buildRacesList(),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
         ],
       ),
     );
