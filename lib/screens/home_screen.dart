@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'welcome_screen_redesigned.dart';
 import 'drivers_screen.dart';
-import 'races_screen.dart';
+import 'race_calendar_screen.dart';
 import 'strategy_screen_redesigned.dart';
 import 'standings_screen_redesigned.dart';
 
@@ -64,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _screens = const [
       WelcomeScreen(),
       DriversScreen(),
-      RacesScreen(),
+      RaceCalendarScreen(),
       StandingsScreenRedesigned(),
       StrategyScreen(),
     ];
