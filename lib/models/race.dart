@@ -1,3 +1,4 @@
+// Add import for time manipulation if needed, but core works
 class Race {
   final String season;
   final String round;
@@ -14,6 +15,38 @@ class Race {
     required this.date,
     this.time,
   });
+
+  // Calculate IST time from UTC
+  DateTime? get localRaceTimeIst {
+    if (time == null) return null;
+    try {
+      final utcTime = DateTime.parse('${date}T${time!.endsWith('Z') ? time : time! + 'Z'}');
+      return utcTime.add(const Duration(hours: 5, minutes: 30));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Example circuit layout image matching Miami details and beyond
+  String get circuitImageUrl {
+    final slug = raceName.toLowerCase();
+    if (slug.contains('miami')) {
+      return 'https://media.formula1.com/image/upload/f_auto/q_auto/v1751632433/common/f1/2026/track/2026trackmiamidetailed.png';
+    }
+    if (slug.contains('canada')) return 'https://media.formula1.com/image/upload/f_auto/q_auto/v1751632441/common/f1/2026/track/2026trackmontrealdetailed.png';
+    if (slug.contains('japan')) return 'https://media.formula1.com/image/upload/f_auto/q_auto/v1751632474/common/f1/2026/track/2026tracksuzukadetailed.png';
+    final cleanSlug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '');
+    return 'https://media.formula1.com/image/upload/f_auto/q_auto/common/f1/2026/track/2026track${cleanSlug}detailed.png';
+  }
+
+  // Example Track icons 
+  String get trackImageUrl {
+    final slug = raceName.toLowerCase();
+    if (slug.contains('miami')) return 'https://media.formula1.com/image/upload/f_auto/q_auto/v1677250050/content/dam/fom-website/2018-redesign-assets/Track%20icons%204x3/Miami.png';
+    // Add default behavior for generic testing
+    final cleanSlug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '').replaceFirst(RegExp(r'^[a-z]'), slug.isNotEmpty ? slug[0].toUpperCase() : '');
+    return 'https://media.formula1.com/image/upload/f_auto/q_auto/v1677250050/content/dam/fom-website/2018-redesign-assets/Track%20icons%204x3/$cleanSlug.png';
+  }
 
   factory Race.fromJson(Map<String, dynamic> json) {
     return Race(

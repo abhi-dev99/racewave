@@ -599,13 +599,51 @@ class _RaceCalendarScreenState extends State<RaceCalendarScreen> with AutomaticK
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            race.time!.substring(0, 5),
+                            race.localRaceTimeIst != null 
+                                ? '${DateFormat('HH:mm').format(race.localRaceTimeIst!)} IST'
+                                : race.time!.substring(0, 5),
                             style: TextStyle(
                               fontSize: isCompact ? 11 : 13,
                               color: isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black.withValues(alpha: 0.6),
                             ),
                           ),
                         ],
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: isCompact ? 50 : 60,
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Image.network(
+                              race.trackImageUrl,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Icon(Icons.map, size: 24, color: isDark ? Colors.white24 : Colors.black26),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(
+                            height: isCompact ? 50 : 60,
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Image.network(
+                              race.circuitImageUrl,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Icon(Icons.route, size: 24, color: isDark ? Colors.white24 : Colors.black26),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     if (_standings != null) ...[

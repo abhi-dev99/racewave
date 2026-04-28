@@ -134,7 +134,61 @@ class F1ApiService {
   // Official Formula1 race card art used on the race calendar.
   static String getRaceCardImageUrl({required String raceName}) {
     final slug = _raceSlug(raceName);
-    return 'https://media.formula1.com/image/upload/c_lfill,w_1296/q_auto/v1740000001/fom-website/static-assets/2026/races/card/$slug.webp';
+
+    // Some Formula1 asset slugs differ from the simple normalized race name.
+    // Try a set of common alternatives so we cover more races without async checks.
+    final Map<String, List<String>> slugAlternatives = {
+      'great-britain': ['british', 'silverstone', 'great-britain'],
+      'austria': ['austrian', 'austria'],
+      'italy': ['italian', 'italy', 'monza'],
+      'belgium': ['belgian', 'belgium', 'spa'],
+      'united-arab-emirates': ['abu-dhabi', 'united-arab-emirates'],
+      'united-states': ['united-states', 'austin', 'unitedstates'],
+      'mexico': ['mexico', 'mexico-city'],
+      'las-vegas': ['las-vegas', 'lasvegas'],
+      'emilia-romagna': ['emilia-romagna', 'imola'],
+      'spain': ['spain', 'barcelona', 'catalunya'],
+      'netherlands': ['netherlands', 'dutch', 'zandvoort'],
+      'china': ['china', 'shanghai'],
+      'japan': ['japan', 'suzuka'],
+      'canada': ['canada', 'montreal'],
+      'miami': ['miami'],
+      'monaco': ['monaco'],
+      'hungary': ['hungary', 'budapest'],
+      'bahrain': ['bahrain'],
+      'saudi-arabia': ['saudi-arabia', 'jeddah'],
+      'qatar': ['qatar'],
+      'singapore': ['singapore'],
+      'azerbaijan': ['azerbaijan', 'baku'],
+      'brazil': ['brazil', 'sao-paulo'],
+      'australia': ['australia', 'albert-park'],
+      'switzerland': ['switzerland'],
+    };
+
+    final candidates = <String>[];
+
+    // Prefer configured alternatives (these are more likely to match F1 asset names)
+    if (slugAlternatives.containsKey(slug)) {
+      candidates.addAll(slugAlternatives[slug]!);
+    }
+
+    // Then try the normalized slug and some variants
+    candidates.add(slug);
+    candidates.add(slug.replaceAll('-', ''));
+    candidates.add(slug.replaceAll('-', '_'));
+
+    // Primary media pattern used across the site
+    const primaryPattern = 'https://media.formula1.com/image/upload/c_lfill,w_1296/q_auto/v1740000001/fom-website/static-assets/2026/races/card/{asset}.webp';
+
+    // Return the primary media URL for the first likely asset name.
+    // This keeps the API synchronous while preferring better-matching asset names.
+    if (candidates.isNotEmpty) {
+      final chosen = candidates.first;
+      return primaryPattern.replaceAll('{asset}', chosen);
+    }
+
+    // Fallback to a generic Formula1 share image
+    return 'https://www.formula1.com/etc/designs/fom-website/social/f1-default-share.jpg';
   }
 
   // Official circuit map / track layout used on race pages.
