@@ -320,7 +320,7 @@ class _RaceCalendarScreenState extends State<RaceCalendarScreen> with AutomaticK
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 7,
-                    childAspectRatio: 1,
+                    childAspectRatio: 1.4,
                   ),
                   itemCount: firstWeekday + daysInMonth,
                   itemBuilder: (context, index) {
