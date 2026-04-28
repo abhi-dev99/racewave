@@ -4,7 +4,9 @@ import '../models/race.dart';
 import '../services/f1_api_service.dart';
 
 class RaceCalendarScreen extends StatefulWidget {
-  const RaceCalendarScreen({super.key});
+  final String? initialRaceName;
+
+  const RaceCalendarScreen({super.key, this.initialRaceName});
 
   @override
   State<RaceCalendarScreen> createState() => _RaceCalendarScreenState();
@@ -22,11 +24,22 @@ class _RaceCalendarScreenState extends State<RaceCalendarScreen> with AutomaticK
   String _viewMode = 'calendar'; // 'calendar' or 'list'
   DateTime _selectedMonth = DateTime.now();
   String _seasonLabel = 'Current';
+  String? _pendingFocusRaceName;
 
   @override
   void initState() {
     super.initState();
+    _pendingFocusRaceName = widget.initialRaceName;
     _loadRaces();
+  }
+
+  @override
+  void didUpdateWidget(covariant RaceCalendarScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialRaceName != oldWidget.initialRaceName) {
+      _pendingFocusRaceName = widget.initialRaceName;
+      _maybeOpenFocusedRace();
+    }
   }
 
   Future<void> _loadRaces() async {
@@ -50,12 +63,11 @@ class _RaceCalendarScreenState extends State<RaceCalendarScreen> with AutomaticK
         if (_races.isNotEmpty && _races.first.season.isNotEmpty) {
           _seasonLabel = _races.first.season;
         }
-        final firstRaceDate = DateTime.tryParse(_races.isNotEmpty ? _races.first.date : '');
-        if (firstRaceDate != null) {
-          _selectedMonth = DateTime(firstRaceDate.year, firstRaceDate.month);
-        }
+        _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
         _isLoading = false;
       });
+
+      _maybeOpenFocusedRace();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -80,6 +92,32 @@ class _RaceCalendarScreenState extends State<RaceCalendarScreen> with AutomaticK
         _selectedMonth.year,
         _selectedMonth.month + delta,
       );
+    });
+  }
+
+  void _maybeOpenFocusedRace() {
+    final raceName = _pendingFocusRaceName;
+    if (raceName == null || _races.isEmpty) return;
+
+    final targetRace = _races.cast<Race?>().firstWhere(
+      (race) => race?.raceName == raceName,
+      orElse: () => null,
+    );
+
+    if (targetRace == null) return;
+
+    _pendingFocusRaceName = null;
+    final targetDate = DateTime.tryParse(targetRace.date);
+    if (targetDate != null) {
+      setState(() {
+        _selectedMonth = DateTime(targetDate.year, targetDate.month);
+      });
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _showRaceDetails(targetRace);
+      }
     });
   }
 

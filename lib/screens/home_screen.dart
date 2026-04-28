@@ -19,9 +19,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int _currentIndex = 0;
   late AnimationController _fabAnimationController;
   late Animation<double> _fabAnimation;
+  String? _pendingRaceName;
 
   // Cache screens for better performance
-  late final List<Widget> _screens;
+  late List<Widget> _screens;
 
   final List<TabItem> _tabItems = [
     TabItem(
@@ -59,15 +60,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    
-    // Initialize cached screens for better performance
-    _screens = const [
-      WelcomeScreen(),
-      DriversScreen(),
-      RaceCalendarScreen(),
-      StandingsScreenRedesigned(),
-      StrategyScreen(),
-    ];
+    _rebuildScreens();
     
     _pageController = PageController();
     _fabAnimationController = AnimationController(
@@ -100,6 +93,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         curve: Curves.easeOutCubic, // Smoother curve
       );
     }
+  }
+
+  void _handleNextRaceTap(String raceName) {
+    setState(() {
+      _pendingRaceName = raceName;
+      _currentIndex = 2;
+      _rebuildScreens();
+    });
+
+    _pageController.animateToPage(
+      2,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _rebuildScreens() {
+    _screens = [
+      WelcomeScreen(onNextRaceTap: _handleNextRaceTap),
+      const DriversScreen(),
+      RaceCalendarScreen(initialRaceName: _pendingRaceName),
+      const StandingsScreenRedesigned(),
+      const StrategyScreen(),
+    ];
   }
 
   @override

@@ -6,7 +6,9 @@ import '../models/driver.dart';
 import '../models/race.dart';
 
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key});
+  final void Function(String raceName)? onNextRaceTap;
+
+  const WelcomeScreen({super.key, this.onNextRaceTap});
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -159,19 +161,24 @@ class _WelcomeScreenState extends State<WelcomeScreen> with AutomaticKeepAliveCl
     final raceDate = DateTime.tryParse(_nextRace!.date);
     final daysUntil = raceDate?.difference(DateTime.now()).inDays ?? 0;
     
-    return Container(
-      padding: EdgeInsets.all(isCompact ? 16 : 24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE10600), Color(0xFFFF4444)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: widget.onNextRaceTap == null ? null : () => widget.onNextRaceTap!(_nextRace!.raceName),
         borderRadius: BorderRadius.circular(isCompact ? 14 : 20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        child: Container(
+          padding: EdgeInsets.all(isCompact ? 16 : 24),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE10600), Color(0xFFFF4444)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(isCompact ? 14 : 20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
           Row(
             children: [
               Container(
@@ -230,7 +237,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with AutomaticKeepAliveCl
               ),
             ],
           ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }

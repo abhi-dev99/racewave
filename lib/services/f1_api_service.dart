@@ -103,20 +103,23 @@ class F1ApiService {
     if (normalized.contains('australia')) return 'australia';
     if (normalized.contains('china')) return 'china';
     if (normalized.contains('japan')) return 'japan';
+    if (normalized.contains('bahrain')) return 'bahrain';
+    if (normalized.contains('saudi')) return 'saudi-arabia';
+    if (normalized.contains('emilia') || normalized.contains('imola')) return 'emilia-romagna';
+    if (normalized.contains('spain') || normalized.contains('barcelona')) return 'spain';
     if (normalized.contains('miami')) return 'miami';
     if (normalized.contains('canada')) return 'canada';
     if (normalized.contains('monaco')) return 'monaco';
-    if (normalized.contains('barcelona') || normalized.contains('spain')) return 'barcelona-catalunya';
     if (normalized.contains('austria')) return 'austria';
     if (normalized.contains('great britain') || normalized.contains('british')) return 'great-britain';
-    if (normalized.contains('belgium')) return 'belgium';
     if (normalized.contains('hungary')) return 'hungary';
-    if (normalized.contains('netherlands')) return 'netherlands';
+    if (normalized.contains('netherlands') || normalized.contains('dutch')) return 'netherlands';
+    if (normalized.contains('belgium')) return 'belgium';
     if (normalized.contains('italy')) return 'italy';
     if (normalized.contains('azerbaijan')) return 'azerbaijan';
     if (normalized.contains('singapore')) return 'singapore';
     if (normalized.contains('united states')) return 'united-states';
-    if (normalized.contains('mexico')) return 'mexico';
+    if (normalized.contains('mexico city') || normalized.contains('mexico')) return 'mexico';
     if (normalized.contains('brazil') || normalized.contains('sao paulo')) return 'brazil';
     if (normalized.contains('las vegas')) return 'las-vegas';
     if (normalized.contains('qatar')) return 'qatar';
@@ -156,6 +159,30 @@ class F1ApiService {
     final slug = _raceSlug(raceName);
 
     final allStats = {
+      'bahrain': {
+        'Circuit Length': '5.412km',
+        'Number of Laps': '57',
+        'Race Distance': '308.238km',
+        'Fastest Lap': '1:31.447',
+      },
+      'saudi-arabia': {
+        'Circuit Length': '6.174km',
+        'Number of Laps': '50',
+        'Race Distance': '308.450km',
+        'Fastest Lap': '1:30.734',
+      },
+      'emilia-romagna': {
+        'Circuit Length': '4.909km',
+        'Number of Laps': '63',
+        'Race Distance': '309.049km',
+        'Fastest Lap': '1:15.484',
+      },
+      'spain': {
+        'Circuit Length': '4.657km',
+        'Number of Laps': '66',
+        'Race Distance': '307.236km',
+        'Fastest Lap': '1:18.183',
+      },
       'miami': {
         'Circuit Length': '5.412km',
         'Number of Laps': '57',
@@ -204,17 +231,77 @@ class F1ApiService {
         'Race Distance': '306.978km',
         'Fastest Lap': '1:05.619',
       },
+      'hungary': {
+        'Circuit Length': '4.381km',
+        'Number of Laps': '70',
+        'Race Distance': '306.630km',
+        'Fastest Lap': '1:16.627',
+      },
+      'netherlands': {
+        'Circuit Length': '4.259km',
+        'Number of Laps': '72',
+        'Race Distance': '306.587km',
+        'Fastest Lap': '1:11.097',
+      },
       'belgian': {
         'Circuit Length': '7.004km',
         'Number of Laps': '44',
         'Race Distance': '308.052km',
         'Fastest Lap': '1:44.323',
       },
+      'singapore': {
+        'Circuit Length': '4.940km',
+        'Number of Laps': '62',
+        'Race Distance': '306.143km',
+        'Fastest Lap': '1:41.905',
+      },
+      'azerbaijan': {
+        'Circuit Length': '6.003km',
+        'Number of Laps': '51',
+        'Race Distance': '306.049km',
+        'Fastest Lap': '1:43.009',
+      },
       'italian': {
         'Circuit Length': '5.793km',
         'Number of Laps': '53',
         'Race Distance': '307.038km',
         'Fastest Lap': '1:21.971',
+      },
+      'united-states': {
+        'Circuit Length': '5.513km',
+        'Number of Laps': '56',
+        'Race Distance': '308.405km',
+        'Fastest Lap': '1:36.169',
+      },
+      'mexico': {
+        'Circuit Length': '4.304km',
+        'Number of Laps': '71',
+        'Race Distance': '305.354km',
+        'Fastest Lap': '1:17.774',
+      },
+      'brazil': {
+        'Circuit Length': '4.309km',
+        'Number of Laps': '71',
+        'Race Distance': '305.879km',
+        'Fastest Lap': '1:10.540',
+      },
+      'las-vegas': {
+        'Circuit Length': '6.201km',
+        'Number of Laps': '50',
+        'Race Distance': '310.050km',
+        'Fastest Lap': '1:35.490',
+      },
+      'qatar': {
+        'Circuit Length': '5.419km',
+        'Number of Laps': '57',
+        'Race Distance': '308.611km',
+        'Fastest Lap': '1:23.196',
+      },
+      'united-arab-emirates': {
+        'Circuit Length': '5.281km',
+        'Number of Laps': '58',
+        'Race Distance': '306.183km',
+        'Fastest Lap': '1:26.103',
       },
     };
 
