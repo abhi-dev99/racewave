@@ -27,25 +27,69 @@ class Race {
     }
   }
 
-  // Example circuit layout image matching Miami details and beyond
+  // Circuit layout image
   String get circuitImageUrl {
-    final slug = raceName.toLowerCase();
-    if (slug.contains('miami')) {
-      return 'https://media.formula1.com/image/upload/f_auto/q_auto/v1751632433/common/f1/2026/track/2026trackmiamidetailed.png';
-    }
-    if (slug.contains('canada')) return 'https://media.formula1.com/image/upload/f_auto/q_auto/v1751632441/common/f1/2026/track/2026trackmontrealdetailed.png';
-    if (slug.contains('japan')) return 'https://media.formula1.com/image/upload/f_auto/q_auto/v1751632474/common/f1/2026/track/2026tracksuzukadetailed.png';
-    final cleanSlug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '');
-    return 'https://media.formula1.com/image/upload/f_auto/q_auto/common/f1/2026/track/2026track${cleanSlug}detailed.png';
+    const map = {
+      'bahrain': 'Bahrain',
+      'jeddah': 'Saudi_Arabia',
+      'albert_park': 'Australia',
+      'suzuka': 'Japan',
+      'shanghai': 'China',
+      'miami': 'Miami',
+      'imola': 'Emilia_Romagna',
+      'monaco': 'Monaco',
+      'villeneuve': 'Canada',
+      'catalunya': 'Spain',
+      'red_bull_ring': 'Austria',
+      'silverstone': 'Great_Britain',
+      'hungaroring': 'Hungary',
+      'spa': 'Belgium',
+      'zandvoort': 'Netherlands',
+      'monza': 'Italy',
+      'baku': 'Baku',
+      'marina_bay': 'Singapore',
+      'americas': 'USA',
+      'rodriguez': 'Mexico',
+      'interlagos': 'Brazil',
+      'vegas': 'Las_Vegas',
+      'losail': 'Qatar',
+      'yas_marina': 'Abu_Dhabi',
+    };
+    
+    final country = map[circuit.circuitId] ?? circuit.location.country.replaceAll(' ', '_');
+    return 'https://media.formula1.com/image/upload/f_auto/q_auto/v1677244985/content/dam/fom-website/2018-redesign-assets/Circuit%20maps%2016x9/${country}_Circuit.png';
   }
 
   // Example Track icons 
   String get trackImageUrl {
-    final slug = raceName.toLowerCase();
-    if (slug.contains('miami')) return 'https://media.formula1.com/image/upload/f_auto/q_auto/v1677250050/content/dam/fom-website/2018-redesign-assets/Track%20icons%204x3/Miami.png';
-    // Add default behavior for generic testing
-    final cleanSlug = slug.replaceAll(RegExp(r'[^a-z0-9]+'), '').replaceFirst(RegExp(r'^[a-z]'), slug.isNotEmpty ? slug[0].toUpperCase() : '');
-    return 'https://media.formula1.com/image/upload/f_auto/q_auto/v1677250050/content/dam/fom-website/2018-redesign-assets/Track%20icons%204x3/$cleanSlug.png';
+    const map = {
+      'bahrain': 'Bahrain',
+      'jeddah': 'Saudi%20Arabia',
+      'albert_park': 'Australia',
+      'suzuka': 'Japan',
+      'shanghai': 'China',
+      'miami': 'Miami',
+      'imola': 'Emilia%20Romagna',
+      'monaco': 'Monaco',
+      'villeneuve': 'Canada',
+      'catalunya': 'Spain',
+      'red_bull_ring': 'Austria',
+      'silverstone': 'Great%20Britain',
+      'hungaroring': 'Hungary',
+      'spa': 'Belgium',
+      'zandvoort': 'Netherlands',
+      'monza': 'Italy',
+      'baku': 'Baku',
+      'marina_bay': 'Singapore',
+      'americas': 'USA',
+      'rodriguez': 'Mexico',
+      'interlagos': 'Brazil',
+      'vegas': 'Las%20Vegas',
+      'losail': 'Qatar',
+      'yas_marina': 'Abu%20Dhabi',
+    };
+    final country = map[circuit.circuitId] ?? circuit.location.country.replaceAll(' ', '%20');
+    return 'https://media.formula1.com/image/upload/f_auto/q_auto/v1677250050/content/dam/fom-website/2018-redesign-assets/Track%20icons%204x3/$country.png';
   }
 
   factory Race.fromJson(Map<String, dynamic> json) {
