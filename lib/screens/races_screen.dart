@@ -16,6 +16,7 @@ class _RacesScreenState extends State<RacesScreen>
   List<Race> _races = [];
   bool _isLoading = true;
   String? _error;
+  dynamic _standings;
 
   @override
   bool get wantKeepAlive => true;
@@ -34,8 +35,11 @@ class _RacesScreenState extends State<RacesScreen>
       });
 
       final races = await _apiService.getCurrentRaces();
+      final standings = await _apiService.getDriverStandings();
+
       setState(() {
         _races = races;
+        _standings = standings;
         _isLoading = false;
       });
     } catch (e) {
@@ -114,6 +118,7 @@ class _RacesScreenState extends State<RacesScreen>
               padding: const EdgeInsets.only(bottom: 20), // Better spacing
               child: _RaceCard(
                 race: race,
+                standings: _standings,
                 onTap: () => _showRaceDetails(race),
               ),
             );
@@ -137,10 +142,12 @@ class _RacesScreenState extends State<RacesScreen>
 
 class _RaceCard extends StatelessWidget {
   final Race race;
+  final dynamic standings;
   final VoidCallback onTap;
 
   const _RaceCard({
     required this.race,
+    this.standings,
     required this.onTap,
   });
 
@@ -274,12 +281,101 @@ class _RaceCard extends StatelessWidget {
                     ],
                   ],
                 ),
+                if (standings != null) ...[
+                  const SizedBox(height: 16),
+                  Divider(
+                    height: 1,
+                    color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Championship Leaders',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildStandingsPreview(context),
+                ],
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildStandingsPreview(BuildContext context) {
+    try {
+      final driverStandings = standings?['DriverStandings'] as List? ?? [];
+      final top3 = driverStandings.take(3).toList();
+
+      if (top3.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      return Column(
+        children: List.generate(top3.length, (index) {
+          final standing = top3[index] as Map?;
+          final driver = standing?['Driver'] as Map?;
+          final points = standing?['points'];
+          final position = standing?['position'];
+          final driverName = driver?['givenName'] ?? '';
+          final driverSurname = driver?['familyName'] ?? '';
+          final fullName = '$driverName $driverSurname'.trim();
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              children: [
+                Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: index == 0
+                        ? const Color(0xFFFFD700)
+                        : index == 1
+                            ? const Color(0xFFC0C0C0)
+                            : const Color(0xFFCD7F32),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Center(
+                    child: Text(
+                      position?.toString() ?? '${index + 1}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    fullName.isNotEmpty ? fullName : 'Driver',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  '$points pts',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFE10600),
+                      ),
+                ),
+              ],
+            ),
+          );
+        }),
+      );
+    } catch (e) {
+      return const SizedBox.shrink();
+    }
   }
 
   String _formatDate(String dateString) {

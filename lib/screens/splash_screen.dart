@@ -267,19 +267,20 @@ class _SplashScreenState extends State<SplashScreen>
                                 color: const Color(0xFFE10600).withOpacity(0.5),
                                 blurRadius: 10,
                               ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
+                      );
+                    },
+                  ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+      ),
     );
-  }
   }
   
   Widget _buildRacingStripes() {

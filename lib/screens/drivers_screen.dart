@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../models/driver.dart';
 import '../services/f1_api_service.dart';
 
@@ -57,9 +58,12 @@ class _DriversScreenState extends State<DriversScreen>
   List<Driver> get _filteredDrivers {
     if (_searchQuery.isEmpty) return _drivers;
     return _drivers.where((driver) {
+      final query = _searchQuery.toLowerCase();
       return driver.fullName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          driver.nationality.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          (driver.code?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+          driver.nationality.toLowerCase().contains(query) ||
+          (driver.code?.toLowerCase().contains(query) ?? false) ||
+          driver.constructor.toLowerCase().contains(query) ||
+          (driver.number?.contains(_searchQuery) ?? false);
     }).toList();
   }
 
@@ -67,25 +71,31 @@ class _DriversScreenState extends State<DriversScreen>
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          _buildSliverAppBar(),
-          if (_isLoading)
-            const SliverFillRemaining(
-              child: Center(child: _LoadingWidget()),
-            )
-          else if (_error != null)
-            SliverFillRemaining(
-              child: _ErrorWidget(
-                error: _error!,
-                onRetry: _loadDrivers,
-              ),
-            )
-          else ...[
-            _buildSearchBar(),
-            _buildDriversGrid(),
+      body: RefreshIndicator.adaptive(
+        onRefresh: _loadDrivers,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          slivers: [
+            _buildSliverAppBar(),
+            if (_isLoading)
+              const SliverFillRemaining(
+                child: Center(child: _LoadingWidget()),
+              )
+            else if (_error != null)
+              SliverFillRemaining(
+                child: _ErrorWidget(
+                  error: _error!,
+                  onRetry: _loadDrivers,
+                ),
+              )
+            else ...[
+              _buildSearchBar(),
+              _buildDriversGrid(),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -123,37 +133,62 @@ class _DriversScreenState extends State<DriversScreen>
   }
 
   Widget _buildSearchBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-        child: TextField(
-          controller: _searchController,
-          onChanged: (value) {
-            setState(() {
-              _searchQuery = value;
-            });
-          },
-          decoration: InputDecoration(
-            hintText: 'Search drivers...',
-            prefixIcon: const Icon(Icons.search_rounded),
-            suffixIcon: _searchQuery.isNotEmpty
-                ? IconButton(
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() {
-                        _searchQuery = '';
-                      });
-                    },
-                    icon: const Icon(Icons.clear_rounded),
-                  )
-                : null,
-            filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.black.withValues(alpha: 0.05),
+              width: 1,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+          child: TextField(
+            controller: _searchController,
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+              });
+            },
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black,
+              fontSize: 15,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Search by name, team, number, nationality, or code...',
+              hintStyle: TextStyle(
+                color: isDark ? Colors.white.withValues(alpha: 0.4) : Colors.black.withValues(alpha: 0.4),
+                fontSize: 15,
+              ),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                color: isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black.withValues(alpha: 0.6),
+                size: 22,
+              ),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() {
+                          _searchQuery = '';
+                        });
+                      },
+                      icon: Icon(
+                        Icons.clear_rounded,
+                        color: isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black.withValues(alpha: 0.6),
+                        size: 20,
+                      ),
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
           ),
         ),
       ),
@@ -205,91 +240,172 @@ class _DriverCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCompact = MediaQuery.sizeOf(context).width < 430;
+    
     return Container(
+      margin: EdgeInsets.only(bottom: isCompact ? 8 : 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20), // More rounded
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08), // Slightly more shadow
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+        borderRadius: BorderRadius.circular(isCompact ? 12 : 16),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.05),
+          width: 1,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(isCompact ? 12 : 16),
           child: Padding(
-            padding: const EdgeInsets.all(24), // Better padding
+            padding: EdgeInsets.all(isCompact ? 12 : 16),
             child: Row(
               children: [
+                // Driver Photo
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: isCompact ? 54 : 70,
+                  height: isCompact ? 54 : 70,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE10600).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        F1ApiService.getTeamColor(driver.constructor).withValues(alpha: 0.2),
+                        F1ApiService.getTeamColor(driver.constructor).withValues(alpha: 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(isCompact ? 10 : 12),
+                    border: Border.all(
+                      color: F1ApiService.getTeamColor(driver.constructor).withValues(alpha: 0.3),
+                      width: 2,
+                    ),
                   ),
-                  child: Center(
-                    child: Text(
-                      driver.code ?? driver.givenName[0],
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFE10600),
-                      ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(isCompact ? 8 : 10),
+                    child: CachedNetworkImage(
+                      imageUrl: F1ApiService.getDriverPhotoUrl(driver.driverId),
+                      fit: BoxFit.cover,
+                      memCacheWidth: isCompact ? 120 : 180,
+                      fadeInDuration: const Duration(milliseconds: 120),
+                      placeholder: (context, url) {
+                        return Center(
+                          child: SizedBox(
+                            width: isCompact ? 16 : 20,
+                            height: isCompact ? 16 : 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(
+                                F1ApiService.getTeamColor(driver.constructor),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                      errorWidget: (context, url, error) {
+                        return Center(
+                          child: Text(
+                            driver.code ?? driver.givenName[0],
+                            style: TextStyle(
+                              fontSize: isCompact ? 16 : 20,
+                              fontWeight: FontWeight.w900,
+                              color: F1ApiService.getTeamColor(driver.constructor),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: isCompact ? 10 : 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         driver.fullName,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
+                        style: TextStyle(
+                          fontSize: isCompact ? 14 : 16,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: isCompact ? 2 : 4),
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF007AFF).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '#${driver.number ?? 'N/A'}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF007AFF),
+                          if (driver.number != null) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: F1ApiService.getTeamColor(driver.constructor).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '#${driver.number}',
+                                style: TextStyle(
+                                    fontSize: isCompact ? 10 : 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: F1ApiService.getTeamColor(driver.constructor),
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            driver.nationality,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            const SizedBox(width: 8),
+                          ],
+                          Flexible(
+                            child: Text(
+                              driver.nationality,
+                              style: TextStyle(
+                                fontSize: isCompact ? 11 : 13,
+                                color: isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black.withValues(alpha: 0.6),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ],
                       ),
+                      if (driver.constructor.isNotEmpty) ...[
+                        SizedBox(height: isCompact ? 2 : 4),
+                        Row(
+                          children: [
+                            Container(
+                              width: isCompact ? 10 : 12,
+                              height: isCompact ? 10 : 12,
+                              decoration: BoxDecoration(
+                                color: F1ApiService.getTeamColor(driver.constructor),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                driver.constructor,
+                                style: TextStyle(
+                                  fontSize: isCompact ? 10 : 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white.withValues(alpha: 0.8) : Colors.black.withValues(alpha: 0.8),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                  color: isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.2),
+                  size: 20,
                 ),
               ],
             ),
@@ -307,6 +423,9 @@ class _DriverDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final teamColor = F1ApiService.getTeamColor(driver.constructor);
+
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
       maxChildSize: 0.95,
@@ -324,7 +443,7 @@ class _DriverDetailSheet extends StatelessWidget {
                 height: 4,
                 margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -333,58 +452,107 @@ class _DriverDetailSheet extends StatelessWidget {
                   controller: scrollController,
                   padding: const EdgeInsets.all(24),
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE10600).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Center(
-                            child: Text(
-                              driver.code ?? driver.givenName[0],
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFE10600),
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            teamColor.withValues(alpha: 0.20),
+                            teamColor.withValues(alpha: 0.06),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(22),
+                        border: Border.all(
+                          color: teamColor.withValues(alpha: 0.45),
+                          width: 1.3,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 92,
+                            height: 92,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: teamColor.withValues(alpha: 0.7), width: 2),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: CachedNetworkImage(
+                                imageUrl: F1ApiService.getDriverPhotoUrl(driver.driverId),
+                                fit: BoxFit.cover,
+                                memCacheWidth: 220,
+                                placeholder: (context, url) => Center(
+                                  child: SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation(teamColor),
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Center(
+                                  child: Text(
+                                    driver.code ?? driver.givenName[0],
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w900,
+                                      color: teamColor,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                driver.fullName,
-                                style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '#${driver.number ?? 'N/A'} • ${driver.nationality}',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      fontSize: 16,
-                                    ),
-                              ),
-                            ],
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  driver.fullName,
+                                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '#${driver.number ?? 'N/A'} • ${driver.nationality}',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 6,
+                                  children: [
+                                    _buildTag(driver.constructor.isNotEmpty ? driver.constructor : 'Free Agent', teamColor),
+                                    _buildTag('P${driver.position == 0 ? '-' : driver.position}', const Color(0xFFE10600)),
+                                    _buildTag('${driver.points} pts', const Color(0xFF007AFF)),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 32),
+
+                    _buildStatsGrid(isDark),
+                    const SizedBox(height: 20),
+
                     _buildInfoSection(context, 'Driver Information', [
-                      _InfoRow('Driver ID', driver.driverId),
+                      _InfoRow('Driver ID', driver.driverId.replaceAll('_', ' ')),
                       _InfoRow('Date of Birth', driver.dateOfBirth),
                       _InfoRow('Nationality', driver.nationality),
+                      _InfoRow('Team', driver.constructor.isEmpty ? 'Unknown' : driver.constructor),
                     ]),
                     const SizedBox(height: 24),
-                    _buildPerformanceCard(context),
+                    _buildPerformanceCard(context, teamColor),
                   ],
                 ),
               ),
@@ -392,6 +560,64 @@ class _DriverDetailSheet extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTag(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid(bool isDark) {
+    return Row(
+      children: [
+        Expanded(child: _buildMiniStat('Points', '${driver.points}', const Color(0xFF007AFF), isDark)),
+        const SizedBox(width: 10),
+        Expanded(child: _buildMiniStat('Wins', '${driver.wins}', const Color(0xFFE10600), isDark)),
+        const SizedBox(width: 10),
+        Expanded(child: _buildMiniStat('Rank', driver.position == 0 ? '-' : 'P${driver.position}', const Color(0xFF34C759), isDark)),
+      ],
+    );
+  }
+
+  Widget _buildMiniStat(String label, String value, Color accent, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.25), width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: accent),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: isDark ? Colors.white.withValues(alpha: 0.65) : Colors.black.withValues(alpha: 0.65),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -450,35 +676,46 @@ class _DriverDetailSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildPerformanceCard(BuildContext context) {
+  Widget _buildPerformanceCard(BuildContext context, Color teamColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dna = driver.wins >= 10
+        ? 'Aggressive title contender with race-winning consistency and front-row pace.'
+        : driver.wins >= 1
+            ? 'Clinical racer with proven conversion when opportunity opens up.'
+            : 'Rising threat building points momentum through consistency and race craft.';
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFFE10600).withOpacity(0.1),
-            const Color(0xFFE10600).withOpacity(0.05),
+            teamColor.withValues(alpha: 0.18),
+            teamColor.withValues(alpha: 0.06),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: teamColor.withValues(alpha: 0.32),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.analytics_rounded,
-                color: Color(0xFFE10600),
+                color: teamColor,
                 size: 24,
               ),
               const SizedBox(width: 8),
               Text(
-                'Performance Analytics',
+                'Racing DNA',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: const Color(0xFFE10600),
+                      color: teamColor,
                       fontWeight: FontWeight.w600,
                     ),
               ),
@@ -486,10 +723,25 @@ class _DriverDetailSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Detailed performance analytics, lap times, and race statistics coming soon.',
+            dna,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: isDark ? Colors.white.withValues(alpha: 0.8) : Colors.black.withValues(alpha: 0.75),
                 ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(Icons.flash_on_rounded, size: 16, color: teamColor),
+              const SizedBox(width: 6),
+              Text(
+                'Estimated pace tier: ${driver.position > 0 && driver.position <= 5 ? 'Elite' : 'Competitive'}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
           ),
         ],
       ),

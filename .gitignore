@@ -18,6 +18,7 @@ build/
 # Dependencies
 .dart_tool/
 .packages
+.flutter-plugins-dependencies
 
 # IDE
 .idea/
@@ -37,3 +38,30 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+.last_build_id
+
+# Flutter web build output accidentally generated at repository root
+canvaskit/
+icons/
+flutter.js
+flutter_bootstrap.js
+flutter_service_worker.js
+main.dart.js
+version.json
+favicon.png
+index.html
+manifest.json
+
+# Generated asset manifests
+assets/AssetManifest.bin
+assets/AssetManifest.bin.json
+assets/AssetManifest.json
+assets/FontManifest.json
+assets/NOTICES
+assets/packages/
+assets/fonts/
+assets/shaders/
+assets/assets/
+
+# IDE module file
+*.iml

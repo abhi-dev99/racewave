@@ -336,8 +336,10 @@ class _SplashScreenState extends State<SplashScreen>
         ),
       ],
     );
+  }
 }
 
+// Custom Painter Classes
 class ParticlePainter extends CustomPainter {
   final double animationValue;
   

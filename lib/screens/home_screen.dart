@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:ui';
-import 'welcome_screen_epic.dart';
+import 'welcome_screen_redesigned.dart';
 import 'drivers_screen.dart';
 import 'races_screen.dart';
-import 'strategy_screen.dart';
-import 'standings_screen.dart';
+import 'strategy_screen_redesigned.dart';
+import 'standings_screen_redesigned.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -65,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       WelcomeScreen(),
       DriversScreen(),
       RacesScreen(),
-      StandingsScreen(),
+      StandingsScreenRedesigned(),
       StrategyScreen(),
     ];
     
@@ -119,20 +119,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
       ),
       bottomNavigationBar: _buildCustomTabBar(),
-      floatingActionButton: _currentIndex == 3
+      floatingActionButton: _currentIndex == 4
           ? ScaleTransition(
               scale: _fabAnimation,
               child: FloatingActionButton.extended(
                 onPressed: () {
                   HapticFeedback.mediumImpact();
-                  // Add quick strategy action
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Strategy tab active. Adjust laps, tire, and pit window to simulate race pace.'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
                 },
                 backgroundColor: const Color(0xFFE10600),
                 foregroundColor: Colors.white,
                 elevation: 4,
                 icon: const Icon(Icons.flash_on),
                 label: const Text(
-                  'Quick Strategy',
+                  'Strategy Tip',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
@@ -188,16 +193,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
-                            child: Icon(
-                              isSelected ? item.activeIcon : item.icon,
-                              key: ValueKey('${item.label}_$isSelected'), // Unique key
-                              color: isSelected
-                                  ? item.color
-                                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                              size: 24,
-                            ),
+                          Icon(
+                            isSelected ? item.activeIcon : item.icon,
+                            color: isSelected
+                                ? item.color
+                                : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            size: 24,
                           ),
                           const SizedBox(height: 4),
                           AnimatedDefaultTextStyle(
